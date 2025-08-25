@@ -1,0 +1,51 @@
+name: CATALYST_CLI
+
+env:
+  BIGCOMMERCE_STORE_HASH: ${{ secrets.BIGCOMMERCE_STORE_HASH }}
+  BIGCOMMERCE_ACCESS_TOKEN: ${{ secrets.BIGCOMMERCE_ACCESS_TOKEN }}
+  BIGCOMMERCE_STOREFRONT_TOKEN: ${{ secrets.BIGCOMMERCE_STOREFRONT_TOKEN }}
+  BIGCOMMERCE_CHANNEL_ID: ${{ secrets.BIGCOMMERCE_CHANNEL_ID }}
+  BIGCOMMERCE_PROJECT_UUID: ${{ secrets.BIGCOMMERCE_PROJECT_UUID }}
+  AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+  AUTH_TRUST_HOST: true
+  CLIENT_LOGGER: true
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  BUILD_WITH_VARS:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Dependencies
+        run: pnpm --filter "./packages/*" build
+
+      - name: Catalyst Link
+        run: pnpm exec catalyst link --project-uuid ${{ env.BIGCOMMERCE_PROJECT_UUID }}
+        working-directory: core
+
+      - name: Catalyst Build
+        run: pnpm exec catalyst build
+        working-directory: core
+
+      - name: Catalyst Deploy
+        run: pnpm exec catalyst deploy
+        working-directory: core

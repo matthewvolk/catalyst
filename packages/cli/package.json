@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "build": "tsup"
+    "build": "tsup",
+    "postinstall": "tsup"
   },
   "engines": {
     "node": "^20.0.0 || ^22.0.0"
