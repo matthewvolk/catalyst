@@ -1,5 +1,72 @@
 # Changelog
 
+## 1.4.0
+
+### Minor Changes
+
+- [#2709](https://github.com/bigcommerce/catalyst/pull/2709) [`3820a75`](https://github.com/bigcommerce/catalyst/commit/3820a754def724ddd335e7b36d5ac2633b6e23e2) Thanks [@jordanarldt](https://github.com/jordanarldt)! - Adds product review submission functionality to the product detail page via a modal form with validation for rating, title, review text, name, and email fields. Integrates with BigCommerce's GraphQL API using Conform and Zod for form validation and real-time feedback.
+
+- [#2690](https://github.com/bigcommerce/catalyst/pull/2690) [`44f6bc0`](https://github.com/bigcommerce/catalyst/commit/44f6bc0e2549909fc2ff7dd456cc462fd0eafcde) Thanks [@jfugalde](https://github.com/jfugalde)! - Introduce displayName and displayKey fields to facets for improved labeling and filtering
+
+  Facet filters now use the `displayName` field for more descriptive labels in the UI, replacing the deprecated `name` field. Product attribute facets now support the `filterKey` field for consistent parameter naming. The facet transformer has been updated to use `displayName` with a fallback to `filterName` when `displayName` is not available.
+
+- [#2708](https://github.com/bigcommerce/catalyst/pull/2708) [`aa35bec`](https://github.com/bigcommerce/catalyst/commit/aa35bec2dd45c7a8280b2583e830deafe666277e) Thanks [@jordanarldt](https://github.com/jordanarldt)! - Adds OpenTelemetry instrumentation for Catalyst, enabling the collection of spans for Catalyst storefronts.
+
+  ### Migration
+
+  Change is new code only, so just copy over `/core/instrumentation.ts` and `core/lib/otel/tracers.ts`.
+
+- [#2711](https://github.com/bigcommerce/catalyst/pull/2711) [`fcd0836`](https://github.com/bigcommerce/catalyst/commit/fcd08369ed17e97619e98c2f71cf7c2fa8467906) Thanks [@jordanarldt](https://github.com/jordanarldt)! - Separate first and last name fields on user session object.
+
+### Patch Changes
+
+- [#2750](https://github.com/bigcommerce/catalyst/pull/2750) [`c22f0e8`](https://github.com/bigcommerce/catalyst/commit/c22f0e889e96d23a972fcd9a702ec137bdd3a800) Thanks [@jorgemoya](https://github.com/jorgemoya)! - Improved login error handling to display a custom error message when BigCommerce indicates a password reset is required, instead of showing a generic error message.
+
+  ## What's Fixed
+
+  When attempting to log in with an account that requires a password reset, users now see an informative error message: "Password reset required. Please check your email for instructions to reset your password."
+
+  **Before**: Generic "something went wrong" error message
+  **After**: Clear error message explaining the password reset requirement
+
+  ## Migration
+
+  ### Step 1: Update Translation Files
+
+  Add this translation key to your locale files (e.g., `core/messages/en.json`):
+
+  ```json
+  {
+    "Auth": {
+      "Login": {
+        "passwordResetRequired": "Password reset required. Please check your email for instructions to reset your password."
+      }
+    }
+  }
+  ```
+
+  Repeat for all supported locales if you maintain custom translations.
+
+  ### Step 2: Update Login Server Action
+
+  In your login server action (e.g., `core/app/[locale]/(default)/(auth)/login/_actions/login.ts`):
+
+  Add the password reset error handling block:
+
+  ```typescript
+  if (
+    error instanceof AuthError &&
+    error.type === 'CallbackRouteError' &&
+    error.cause &&
+    error.cause.err instanceof BigCommerceGQLError &&
+    error.cause.err.message.includes('Reset password"')
+  ) {
+    return submission.reply({ formErrors: [t('passwordResetRequired')] });
+  }
+  ```
+
+  This should be placed in your error handling, before the generic "Invalid credentials" check.
+
 ## 1.3.5
 
 ### Patch Changes
